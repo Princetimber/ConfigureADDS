@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "ADDS MODULE",
+      "path": "./ActiveDirectory"
+    }
+  ],
+  "settings": {
+    "editor.semanticHighlighting.enabled": true,
+    "extensions.ignoreRecommendations": true,
+    "powershell.cwd": "ActiveDirectory"
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.powershell",
+      "esbenp.prettier-vscode",
+      "oderwat.indent-rainbow"
+    ]
+  }
+}
