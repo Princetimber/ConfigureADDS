@@ -1,0 +1,128 @@
+# Active Directory Deployment Module with Logging, Reporting, and Pester Tests
+# Filename: Install-ADDomainForest.psm1
+
+# Requires -Modules ActiveDirectory, Pester
+
+#region Logging Setup
+$Global:LogFile = "$env:TEMP\ADDeployment_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+function Write-Log {
+    param (
+        [string]$Message,
+        [string]$Level = 'INFO'
+    )
+    $entry = "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] [$Level] $Message"
+    Add-Content -Path $Global:LogFile -Value $entry
+    Write-Verbose $entry
+}
+#endregion
+
+function Install-ADModule {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$ModuleName = "AD-Domain-Services"
+    )
+    try {
+        Write-Log "Checking if $ModuleName is installed....."
+        $feature = Get-WindowsFeature -Name $ModuleName
+        if (-not $feature.Installed) {
+            Write-Log "Installing $ModuleName module..."
+            Install-WindowsFeature -Name $ModuleName -IncludeManagementTools -ErrorAction Stop
+            Write-Log "$ModuleName module installed successfully."
+        } else {
+            Write-Log "$ModuleName module is already installed."
+        }
+    } catch {
+        Write-Log "Failed to install $ModuleName module: $_" 'ERROR'
+        throw $_
+    }
+}
+
+function Add-SafeModeAdministratorPassword {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [securestring]$Password
+    )
+    try {
+        $adminAccount = [ADSI]"WinNT://./Administrator, user"
+        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
+        $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+        $adminAccount.SetPassword($plainPassword)
+        $adminAccount.SetInfo()
+        [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+        Write-Log "Safe Mode Administrator password set successfully."
+    } catch {
+        Write-Log "Failed to set Safe Mode Administrator password: $_" 'ERROR'
+        throw $_
+    }
+}
+
+function Install-ADDomainForest {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory = $true)][string]$DomainName,
+        [Parameter(Mandatory = $true)][securestring]$SafeModeAdministratorPassword,
+        [string]$DatabasePath,
+        [string]$LogPath,
+        [string]$SysvolPath,
+        [ValidateSet("Win2008","Win2008R2","Win2012","Win2012R2","Win2025","Default","WinThreshold")]
+        [string]$DomainMode = "Win2025",
+        [ValidateSet("Win2008","Win2008R2","Win2012","Win2012R2","Win2025","Default","WinThreshold")]
+        [string]$ForestMode = "Win2025",
+        [switch]$InstallDNS,
+        [string]$DomainNetbiosName,
+        [switch]$Force
+    )
+    try {
+        Install-ADModule
+        if ($PSCmdlet.ShouldProcess("Install AD DS Forest for $DomainName")) {
+            $params = @{ DomainName = $DomainName; SafeModeAdministratorPassword = $SafeModeAdministratorPassword; InstallDNS = $InstallDNS.IsPresent }
+            foreach ($p in 'DatabasePath','LogPath','SysvolPath','DomainMode','ForestMode','DomainNetbiosName') {
+                if ($PSBoundParameters.ContainsKey($p)) { $params[$p] = $PSBoundParameters[$p] }
+            }
+            if ($Force.IsPresent) { $params['Force'] = $true }
+            Write-Log "Starting AD DS Forest installation for $DomainName."
+            Install-ADDSForest @params -ErrorAction Stop
+            Write-Log "AD DS Forest installation for $DomainName completed successfully."
+        }
+    } catch {
+        Write-Log "Failed to install AD DS Forest: $_" 'ERROR'
+        throw $_
+    }
+}
+
+Export-ModuleMember -Function Install-ADModule, Add-SafeModeAdministratorPassword, Install-ADDomainForest
+
+#region Module Manifest Creation
+New-ModuleManifest -Path "$PSScriptRoot\Install-ADDomainForest.psd1" `
+    -RootModule "Install-ADDomainForest.psm1" `
+    -Author "Admin" `
+    -CompanyName "EnterpriseOrg" `
+    -Description "Automated AD DS Forest Deployment with Logging and Pester Validation" `
+    -ModuleVersion "1.0.0" `
+    -PowerShellVersion "5.1" `
+    -RequiredModules @("ActiveDirectory")
+#endregion
+
+#region Pester Tests
+Describe "Install-ADDomainForest Module Tests" {
+    It "Should load the module without error" {
+        { Import-Module "$PSScriptRoot\Install-ADDomainForest.psm1" -Force } | Should -Not -Throw
+    }
+
+    It "Should contain Install-ADModule function" {
+        (Get-Command Install-ADModule -ErrorAction SilentlyContinue).Name | Should -Be "Install-ADModule"
+    }
+
+    It "Should contain Add-SafeModeAdministratorPassword function" {
+        (Get-Command Add-SafeModeAdministratorPassword -ErrorAction SilentlyContinue).Name | Should -Be "Add-SafeModeAdministratorPassword"
+    }
+
+    It "Should contain Install-ADDomainForest function" {
+        (Get-Command Install-ADDomainForest -ErrorAction SilentlyContinue).Name | Should -Be "Install-ADDomainForest"
+    }
+}
+#endregion
+# End of Install-ADDomainForest.psm1

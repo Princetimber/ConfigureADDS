@@ -1,16 +1,16 @@
-# ...existing code...
-# End of Install-ADDomainForest.psm1
-# This module contains functions to install and configure Active Directory Domain Services, including creating organizational units and groups, and managing group memberships.
-# It also includes functions to install the AD module and set the Safe Mode Administrator password.
-# The functions are designed to be used in a PowerShell environment with appropriate permissions and prerequisites.
-# This module is intended for use in a Windows Server environment where Active Directory Domain Services is available.
-# The functions handle errors gracefully and provide informative messages to the user.
-# This module is part of a larger script for setting up and managing an Active Directory environment.
-# It is designed to be modular and reusable, allowing for easy integration into larger scripts or automation workflows.
-# The functions utilize PowerShell's advanced features such as parameter validation, error handling, and cmdlet binding to ensure robust and user-friendly operation.
-# The module is structured to allow for easy expansion and modification, with clear parameter definitions and error handling.
-# The functions are designed to be efficient and effective, leveraging PowerShell's capabilities to interact with Active Directory.
-# The module is intended to be used by system administrators and IT professionals who need to manage Active Directory environments.
+  # ...existing code...
+  # End of Install-ADDomainForest.psm1
+  # This module contains functions to install and configure Active Directory Domain Services, including creating organizational units and groups, and managing group memberships.
+  # It also includes functions to install the AD module and set the Safe Mode Administrator password.
+  # The functions are designed to be used in a PowerShell environment with appropriate permissions and prerequisites.
+  # This module is intended for use in a Windows Server environment where Active Directory Domain Services is available.
+  # The functions handle errors gracefully and provide informative messages to the user.
+  # This module is part of a larger script for setting up and managing an Active Directory environment.
+  # It is designed to be modular and reusable, allowing for easy integration into larger scripts or automation workflows.
+  # The functions utilize PowerShell's advanced features such as parameter validation, error handling, and cmdlet binding to ensure robust and user-friendly operation.
+  # The module is structured to allow for easy expansion and modification, with clear parameter definitions and error handling.
+  # The functions are designed to be efficient and effective, leveraging PowerShell's capabilities to interact with Active Directory.
+  # The module is intended to be used by system administrators and IT professionals who need to manage Active Directory environments.
 
 
 function Install-ADModule {
