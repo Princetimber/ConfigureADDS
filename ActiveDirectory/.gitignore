@@ -19,3 +19,18 @@ Icon
 
 # Volume-specific
 .VolumeIcon.icns
+
+# PowerShell logs and transcripts
+*.log
+*.ps1xml
+Transcripts/
+
+# VS Code settings and workspace files
+.vscode/
+*.code-workspace
+
+# Backup / temp files
+*~
+*.tmp
+*.swp
+*.swo
